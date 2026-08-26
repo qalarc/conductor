@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CONDUCTOR — bridge listener</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' x='4' font-size='26' fill='%233cf0ff'>◈</text></svg>">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .log { font-size: 11px; line-height: 1.6; padding: 12px; overflow-y: auto; flex: 1; }
+  .row { padding: 2px 0; border-bottom: 1px solid #ffffff08; display: flex; gap: 9px; }
+  .row .t  { color: #55556e; flex-shrink: 0; }
+  .row .ty { font-weight: 700; flex-shrink: 0; width: 66px; }
+  .row .bd { color: var(--muted); word-break: break-all; }
+  .ty.hello   { color: var(--green); }
+  .ty.catalog { color: var(--purple); }
+  .ty.sources { color: var(--orange); }
+  .ty.pong    { color: var(--cyan); }
+  .live { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:3px 13px; padding:12px; }
+  .lv { display:grid; grid-template-columns:1fr 40px; font-size:10px; gap:6px; }
+  .lv .k { color: var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lv .v { color: var(--orange); text-align:right; font-variant-numeric:tabular-nums; }
+</style>
+</head>
+<body>
+
+<div class="tb">
+  <div class="brand"><span class="bmark">◈</span><span class="bname">BRIDGE LISTENER</span></div>
+  <div class="dvd"></div>
+  <div class="stat">MSGS <b id="n">0</b></div>
+  <div class="dvd"></div>
+  <div class="stat">RATE <b id="hz">0</b> Hz</div>
+  <div class="dvd"></div>
+  <div class="stat">PRODUCER <b id="prod">—</b></div>
+  <div class="sp"></div>
+  <button class="btn" id="ping">PING</button>
+  <button class="btn" id="clear">CLEAR</button>
+</div>
+
+<div class="wrap" style="grid-template-columns:1fr 1fr">
+  <div class="col">
+    <div class="panel grow">
+      <div class="ph"><span class="dot"></span><span>MESSAGE LOG</span></div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="panel grow">
+      <div class="ph"><span class="dot"></span><span>LIVE VALUES</span></div>
+      <div class="live" id="live"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+/* Minimal reference CONSUMER. This is the smallest correct implementation of
+   the muse-bridge-v1 protocol — MUSEALL's consumer does the same three things:
+   open the channel, ping for a catalog, handle `sources`.                    */
+
+const ch  = new BroadcastChannel('muse-bridge-v1');
+const log = document.getElementById('log');
+const live = document.getElementById('live');
+const cells = new Map();
+
+let n = 0, srcCount = 0, hzAt = performance.now();
+let catalog = [];
+
+function add(type, body) {
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `<span class="t">${new Date().toLocaleTimeString()}</span>` +
+                  `<span class="ty ${type}">${type}</span>` +
+                  `<span class="bd">${body}</span>`;
+  log.prepend(row);
+  while (log.children.length > 250) log.lastChild.remove();
+  document.getElementById('n').textContent = ++n;
+}
+
+function buildLive(sources) {
+  live.innerHTML = '';
+  cells.clear();
+  for (const s of sources) {
+    const el = document.createElement('div');
+    el.className = 'lv';
+    el.innerHTML = `<span class="k" title="${s.id}">${s.id.replace('gesture.','')}</span><span class="v">0.00</span>`;
+    live.appendChild(el);
+    cells.set(s.id, el.querySelector('.v'));
+  }
+}
+
+ch.onmessage = e => {
+  const d = e.data;
+  if (!d || d.app === 'listener') return;
+
+  if (d.type === 'sources') {
+    srcCount++;
+    for (const [id, v] of Object.entries(d.values)) {
+      const c = cells.get(id);
+      if (c) c.textContent = (+v).toFixed(2);
+    }
+    // Log a sample rather than every frame — 30Hz would flood the DOM.
+    if (srcCount % 30 === 0) {
+      const nonZero = Object.entries(d.values).filter(([, v]) => v > 0.02);
+      add('sources', `${Object.keys(d.values).length} values, ${nonZero.length} active`);
+    }
+  } else if (d.type === 'catalog') {
+    catalog = d.sources;
+    buildLive(catalog);
+    add('catalog', `${d.sources.length} sources from "${d.app}"`);
+  } else if (d.type === 'hello') {
+    document.getElementById('prod').textContent = d.app;
+    add('hello', `app=${d.app}`);
+  } else if (d.type === 'pong') {
+    add('pong', `app=${d.app}`);
+  }
+};
+
+setInterval(() => {
+  const now = performance.now();
+  document.getElementById('hz').textContent = Math.round(srcCount * 1000 / (now - hzAt));
+  srcCount = 0; hzAt = now;
+}, 1000);
+
+// Announce ourselves so CONDUCTOR lists us as a peer.
+setInterval(() => ch.postMessage({ type: 'hello', app: 'listener', t: Date.now() }), 2000);
+ch.postMessage({ type: 'hello', app: 'listener', t: Date.now() });
+ch.postMessage({ type: 'ping' });
+
+document.getElementById('ping').onclick  = () => { ch.postMessage({ type: 'ping' }); add('pong', 'ping sent'); };
+document.getElementById('clear').onclick = () => { log.innerHTML = ''; n = 0; document.getElementById('n').textContent = 0; };
+
+window.LISTENER = { get catalog() { return catalog; }, get count() { return n; } };
+</script>
+</body>
+</html>

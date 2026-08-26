@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CONDUCTOR</title>
+<!-- Inline data-URI favicon: avoids a 404 without shipping a binary asset. -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' x='4' font-size='26' fill='%23ff9a3c'>◈</text></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ─── Topbar ─────────────────────────────────────────────────────────── -->
+<div class="tb">
+  <div class="brand">
+    <span class="bmark">◈</span>
+    <span class="bname">CONDUCTOR</span>
+    <span class="bver">v0.1</span>
+  </div>
+  <div class="dvd"></div>
+  <div class="stat">FPS <b id="kv-fps">—</b></div>
+  <div class="dvd"></div>
+  <div class="stat">HANDS <b id="kv-hands">none</b></div>
+  <div class="dvd"></div>
+  <div class="stat">BRIDGE <b id="kv-hz">0</b> Hz</div>
+  <div class="sp"></div>
+  <button class="btn" id="btn-cam">START CAMERA</button>
+</div>
+
+<div class="wrap">
+
+  <!-- ─── Left column: stage ───────────────────────────────────────────── -->
+  <div class="col">
+    <div class="panel grow">
+      <div class="ph">
+        <span class="dot"></span>
+        <span>TRACKING</span>
+        <span class="sp2"></span>
+        <span style="color:#ff9a3c">R</span>
+        <span style="color:#b16cff">L</span>
+      </div>
+      <div class="stage">
+        <video id="video" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+        <div class="stage-msg" id="stage-msg">
+          <div class="ico">◉</div>
+          <div class="ttl">CAMERA OFF</div>
+          <div class="sub"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Bridge panel ───────────────────────────────────────────────── -->
+    <div class="panel">
+      <div class="ph"><span class="dot"></span><span>BRIDGE</span></div>
+      <div class="pb">
+        <div class="kv"><span class="k">CHANNEL</span><span class="v off" id="kv-channel">—</span></div>
+        <div class="kv"><span class="k">PROTOCOL</span><span class="v">muse-bridge-v1</span></div>
+        <div class="kv"><span class="k">SEND RATE</span><span class="v" id="kv-hz2">30 Hz max</span></div>
+        <div class="kv"><span class="k">SOURCES</span><span class="v" id="src-count">0</span></div>
+        <div class="kv"><span class="k">PEERS</span><span class="v" id="peer-count">0</span></div>
+        <div style="margin-top:9px" id="peers"></div>
+        <div class="hint">
+          Consumers listen on <code>BroadcastChannel('muse-bridge-v1')</code>.
+          Cross-origin: open CONDUCTOR from the consumer window, or append
+          <code>?target=&lt;origin&gt;</code> to use <code>postMessage</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Right column: sources + voice ────────────────────────────────── -->
+  <div class="col right">
+    <div class="panel">
+      <div class="ph">
+        <span class="dot"></span><span>SOURCES</span>
+        <span class="sp2"></span>
+        <span style="letter-spacing:0;text-transform:none">GPU <b id="kv-delegate" class="v off" style="font-size:10px">—</b></span>
+      </div>
+      <div class="pb tight" id="sources" style="max-height:52vh"></div>
+    </div>
+
+    <!-- ─── Voice panel ────────────────────────────────────────────────── -->
+    <div class="panel">
+      <div class="ph">
+        <span class="dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></span>
+        <span>VOICE</span>
+        <span class="sp2"></span>
+        <span class="v off" id="kv-mic" style="font-size:10px">off</span>
+      </div>
+      <div class="pb">
+        <div style="display:flex;gap:7px;margin-bottom:11px">
+          <button class="btn sm" id="btn-mic">START MIC</button>
+          <button class="btn sm" id="btn-monitor" disabled>MONITOR OFF</button>
+        </div>
+
+        <div class="fx-row">
+          <span class="lb">FILTER</span>
+          <input type="range" id="fx-filter" min="0" max="100" value="100">
+          <span class="vl" id="fx-filter-v">1.00</span>
+        </div>
+        <div class="fx-row">
+          <span class="lb">DRIVE</span>
+          <input type="range" id="fx-distortion" min="0" max="100" value="0">
+          <span class="vl" id="fx-distortion-v">0.00</span>
+        </div>
+        <div class="fx-row">
+          <span class="lb">DELAY</span>
+          <input type="range" id="fx-delay" min="0" max="100" value="0">
+          <span class="vl" id="fx-delay-v">0.00</span>
+        </div>
+        <div class="fx-row">
+          <span class="lb">REVERB</span>
+          <input type="range" id="fx-reverb" min="0" max="100" value="0">
+          <span class="vl" id="fx-reverb-v">0.00</span>
+        </div>
+        <div class="fx-row">
+          <span class="lb">WET/DRY</span>
+          <input type="range" id="fx-wet" min="0" max="100" value="50">
+          <span class="vl" id="fx-wet-v">0.50</span>
+        </div>
+
+        <div class="warn-box">
+          ⚠ <b>MONITOR</b> routes the mic to your speakers. Use headphones —
+          without them this will feed back. Analysis and bridge broadcast work
+          with monitoring off.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

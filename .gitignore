@@ -1,0 +1,32 @@
+# Generated dev server (recreated by launch.sh on every run)
+.conductor_server.py
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Node (test harness only — no build step in the app itself)
+node_modules/
+package-lock.json
+tests/out*.txt
+tests/profile/
+
+# Logs
+*.log
+logs/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local secrets
+.env
+.dev.vars
+
+# Test artefacts
+/tmp_test/
+*.har
+screenshots/
