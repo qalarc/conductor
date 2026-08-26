@@ -1,5 +1,9 @@
 # ◈ CONDUCTOR
 
+**v1.0.0** — protocol frozen, integration-tested against MUSEALL v3.3
+(headless-chromium CDP, 18/18 green; harness lives in the museall repo at
+`tests/integration_conductor.js`).
+
 A webcam hand-tracking **instrument**. It watches your hands (and optionally
 your voice), turns them into ~50 normalised control sources, and **broadcasts
 them to other apps** — primarily [MUSEALL](../museall_image_visualiser), a
@@ -38,26 +42,56 @@ Then open:
 
 | URL | What it is |
 | --- | --- |
-| `http://127.0.0.1:2610/index.html` | The instrument |
+| `http://127.0.0.1:2610/index.html` | The instrument (standalone) |
 | `http://127.0.0.1:2610/test.html`  | A bridge listener for debugging |
+
+**The canonical URL when pairing with MUSEALL is same-origin instead** — see
+[LINKING with MUSEALL](#linking-with-museall) below:
+
+```
+http://127.0.0.1:2601/conductor/index.html
+```
 
 **A secure context is required** for camera and microphone access.
 `127.0.0.1` / `localhost` counts as secure, so local development is fine; any
 other host needs https.
 
-### First run
+---
 
-1. Open `index.html`. The bridge starts broadcasting **immediately** — before
-   any permission prompt.
-2. Press **START CAMERA**. The browser asks for camera permission and the
-   MediaPipe model (~8 MB) downloads on first use.
-3. Raise a hand. The skeleton overlay locks on and the SOURCES bars move.
-4. Optionally press **START MIC** in the VOICE panel for voice sources.
+## LINKING with MUSEALL
 
-With no camera attached the page still loads, still broadcasts its heartbeat
-and catalog, and shows a **NO CAMERA FOUND** state. This is deliberate — it
-means a consumer can be developed against CONDUCTOR on a machine with no
-webcam.
+`BroadcastChannel` is **same-origin only** — two pages on different ports
+(2601 vs 2610) cannot see each other. So when CONDUCTOR and
+[MUSEALL](../museall_image_visualiser) run together, serve CONDUCTOR **from
+MUSEALL's own server** under `/conductor/`:
+
+```bash
+# one-off: symlink the repo into the museall project (gitignored there)
+ln -s ../conductor_instrument  /home/fivelidz/projects/museall_image_visualiser/conductor
+
+# museall's dev server (port 2601) follows the symlink — verify:
+curl http://127.0.0.1:2601/conductor/index.html
+```
+
+Then:
+
+1. Open **`http://127.0.0.1:2601/museall_v3/index.html`** (the visualiser).
+2. Click the **⟠ EXT** pill in MUSEALL's header — it opens
+   `/conductor/index.html` in a new tab, same origin.
+3. The pill turns **green** and reads **`EXT 50`** (live source count) as soon
+   as CONDUCTOR's hello/catalog arrive — which happens **before** any camera
+   permission. A grey pill therefore means wrong origin or CONDUCTOR not
+   open — never "camera not started yet".
+4. MUSEALL's binding wizard immediately shows GESTURE / VOICE source chips;
+   bind e.g. `gesture.r.pinch` → `vfx.liquify` and the param follows your
+   hand at ~30 Hz.
+5. Closing the CONDUCTOR tab (or its heartbeat stopping for >5 s) turns the
+   pill grey again; bound values decay to zero over ~600 ms rather than
+   sticking at their last value.
+
+**Deployment:** both apps ship on the **same Cloudflare Pages project**
+(`museall.qalarc.com`) — upload CONDUCTOR under the `/conductor/` path. Same
+origin in production exactly as in dev; nothing else changes.
 
 ---
 
@@ -277,8 +311,8 @@ Needs a human at a real machine:
 
 ## Roadmap
 
-- [ ] **MUSEALL consumer** — the receiving half, with a binding UI built from
-      the catalog message
+- [x] **MUSEALL consumer** — shipped in MUSEALL v3.3 (`ext-bridge.js` +
+      catalog-driven binding wizard); integration-tested headless, 18/18
 - [ ] **Binding/curve layer** — per-source range, curve (ease/exp/log/invert)
       and invert, so a consumer receives pre-shaped values
 - [ ] **Presets** — save/load named source→target mappings
