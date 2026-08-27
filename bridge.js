@@ -78,7 +78,11 @@ export class Bridge {
     if (typeof BroadcastChannel !== 'undefined') {
       try {
         this.channel = new BroadcastChannel(CHANNEL_NAME);
-        this.channel.onmessage = e => this._onMessage(e.data);
+        this.channel.onmessage = e => {
+          const d = e.data;
+          if (!d || typeof d !== 'object' || !d.type) return;   // same guard as the window path
+          this._onMessage(d);
+        };
       } catch (e) {
         console.warn('[bridge] BroadcastChannel unavailable:', e.message);
       }

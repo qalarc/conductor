@@ -327,12 +327,18 @@ export class GestureEngine {
   /** Exponential smoothing on landmark positions (keeps the skeleton calm). */
   _smoothLandmarks(fresh, prev) {
     if (!prev || prev.length !== fresh.length) return fresh.map(p => ({ ...p }));
+    // In-place update of the arrays we own — the old .map() allocated a new
+    // array + 21 landmark objects per hand per frame. Nothing retains these
+    // objects across frames (trail/history copy values out; metrics is rebuilt
+    // each frame), so mutating prev is behaviour-identical.
     const a = LANDMARK_SMOOTHING;
-    return fresh.map((p, i) => ({
-      x: prev[i].x + (p.x - prev[i].x) * a,
-      y: prev[i].y + (p.y - prev[i].y) * a,
-      z: (prev[i].z ?? 0) + ((p.z ?? 0) - (prev[i].z ?? 0)) * a,
-    }));
+    for (let i = 0; i < fresh.length; i++) {
+      const p = fresh[i], q = prev[i];
+      q.x += (p.x - q.x) * a;
+      q.y += (p.y - q.y) * a;
+      q.z = (q.z ?? 0) + ((p.z ?? 0) - (q.z ?? 0)) * a;
+    }
+    return prev;
   }
 
   /* ─── Metrics (ported maths) ───────────────────────────────────────────── */

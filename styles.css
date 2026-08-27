@@ -48,6 +48,10 @@ html, body {
          background: linear-gradient(90deg, var(--orange), var(--purple));
          -webkit-background-clip: text; background-clip: text; color: transparent; }
 .bver  { color: var(--muted); font-size: 10px; letter-spacing: 1px; }
+/* suite hub link — subtle, sits after the version */
+.sulink { color: var(--muted); font-size: 10px; letter-spacing: 1px; text-decoration: none;
+          padding: 2px 6px; border-radius: 3px; transition: color .2s, background .2s; }
+.sulink:hover { color: var(--text); background: var(--border); text-decoration: none; }
 .sp    { flex: 1; }
 .dvd   { width: 1px; height: 20px; background: var(--border); }
 

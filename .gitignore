@@ -30,3 +30,6 @@ Thumbs.db
 /tmp_test/
 *.har
 screenshots/
+
+# Stray self-referencing symlink (conductor_instrument -> ../conductor_instrument)
+conductor_instrument

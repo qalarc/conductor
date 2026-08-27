@@ -24,6 +24,9 @@ const COLORS = {
   Left:  { main: '#b16cff', glow: '#b16cff', dim: '#b16cff44' },
 };
 const CYAN = '#3cf0ff';
+// Fingertip landmark indices — hoisted out of _drawHand (was a fresh Set per
+// hand per frame).
+const TIP_IDS = new Set([4, 8, 12, 16, 20]);
 
 export class Overlay {
   constructor(canvas) {
@@ -99,9 +102,8 @@ export class Overlay {
     ctx.shadowBlur = 0;
 
     // ── Landmarks — fingertips larger than joints ──
-    const TIPS = new Set([4, 8, 12, 16, 20]);
     for (let i = 0; i < lm.length; i++) {
-      const isTip = TIPS.has(i);
+      const isTip = TIP_IDS.has(i);
       ctx.beginPath();
       ctx.arc(px(lm[i]), py(lm[i]), isTip ? 5 : 3, 0, Math.PI * 2);
       ctx.fillStyle = isTip ? '#ffffff' : c.main;
