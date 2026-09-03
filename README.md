@@ -1,12 +1,19 @@
 # ◈ CONDUCTOR
 
+> Part of **[MUSE SUITE](https://museall.qalarc.com/suite/)** — [museall.qalarc.com](https://museall.qalarc.com) · [desktop installers (Win/macOS/Linux)](https://github.com/qalarc/muse-suite/releases/latest)
+
 **v1.0.0** — protocol frozen, integration-tested against MUSEALL v3.3
 (headless-chromium CDP, 18/18 green; harness lives in the museall repo at
 `tests/integration_conductor.js`).
 
+> **Note on the other half:** the MUSEALL source is closed. CONDUCTOR is the
+> open gesture-instrument half of the suite — this repo is the full,
+> build-free source for it. Binaries and docs for the whole suite live in
+> [qalarc/muse-suite](https://github.com/qalarc/muse-suite).
+
 A webcam hand-tracking **instrument**. It watches your hands (and optionally
 your voice), turns them into ~50 normalised control sources, and **broadcasts
-them to other apps** — primarily [MUSEALL](../museall_image_visualiser), a
+them to other apps** — primarily [MUSEALL](https://museall.qalarc.com/museall_v3/), a
 music visualiser.
 
 CONDUCTOR does not make sound or pictures itself. It is a *control surface*:
@@ -62,7 +69,7 @@ other host needs https.
 
 `BroadcastChannel` is **same-origin only** — two pages on different ports
 (2601 vs 2610) cannot see each other. So when CONDUCTOR and
-[MUSEALL](../museall_image_visualiser) run together, serve CONDUCTOR **from
+[MUSEALL](https://museall.qalarc.com/museall_v3/) run together, serve CONDUCTOR **from
 MUSEALL's own server** under `/conductor/`:
 
 ```bash
